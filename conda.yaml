@@ -1,0 +1,11 @@
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.7.5
+  - pip=20.1
+  - python-mss
+  - numpy
+  - opencv
+  - pip:
+    - rpaframework==7.0.5
