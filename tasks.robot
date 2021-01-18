@@ -3,7 +3,7 @@ Library  video_recorder.py
 Library  RPA.Browser.Selenium
 
 *** Keyword ***
-Stop Video Recording
+Store Video Only If Run Fails
     Run Keyword If Test Failed  Stop Recorder
     Run Keyword If Test Passed  Cancel Recorder 
 
@@ -17,7 +17,7 @@ Video Recording Example
     Click Link    //a[@href="/docs/automation-libraries/rpa-framework-overview"]
     Sleep  1s
     Close All Browsers
-    Fail
-    [Teardown]  Stop Video Recording
+    # [Teardown]  Store Video Only If Run Fails
+    [Teardown]  Stop Recorder
 
 
