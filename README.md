@@ -38,6 +38,7 @@ Start recording:
       monitor=1
       scale=1.0
       fps=5
+      compression=True
 
 Stop or cancel recording:
 
