@@ -11,11 +11,11 @@ class video_recorder:
         self.worker = None
         self.filename = None
 
-    def start_recorder(self, filename="recording.avi", max_length=60.0, monitor=1, scale=1.0, fps=5):
+    def start_recorder(self, filename="recording.avi", max_length=60.0, monitor=1, scale=1.0, fps=5, compress=True):
         if self.worker:
             raise ValueError("Recorder busy")
         self.filename = filename
-        self.worker = threading.Thread(target=self._loop, args=(filename, max_length, monitor, scale, fps))
+        self.worker = threading.Thread(target=self._loop, args=(filename, max_length, monitor, scale, fps, compress))
         self.worker.start()
 
     def stop_recorder(self, cancel=False):
@@ -32,7 +32,7 @@ class video_recorder:
         with mss.mss() as sct:
             return sct.monitors
 
-    def _loop(self, filename, max_length, monitor, scale, fps):
+    def _loop(self, filename, max_length, monitor, scale, fps, compress):
         with mss.mss() as sct:
             # Part of the screen to capture
             monitor = sct.monitors[monitor]
@@ -42,6 +42,7 @@ class video_recorder:
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
             out = cv2.VideoWriter(filename, fourcc, fps, (width, height))
 
+            prev_shot = None
             frame_number = 0
             start_time = time.time()
             while self.worker and time.time() < start_time + max_length:
@@ -52,12 +53,15 @@ class video_recorder:
 
                 # Get raw pixels from the screen, save it to a Numpy array
                 frame = np.array(sct.grab(monitor))
+                if compress and prev_shot is not None and (prev_shot==frame).all():
+                    continue
+                
+                prev_shot = frame
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
-
                 frame = cv2.resize(frame, (width, height))
 
-                # cv2.putText(frame, "%f" % (time.time() - start_time),
-                #            (10, 10),  cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                cv2.putText(frame, '{0:.2f}'.format(time.time() - start_time),
+                           (10, 30),  cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 4)
                 out.write(frame)
 
         # Clean up
