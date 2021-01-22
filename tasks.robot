@@ -9,7 +9,7 @@ Store Video Only If Run Fails
 
 *** Task ***
 Video Recording Example
-    [Setup]  Start Recorder  filename=output/video.webm
+    [Setup]  Start Recorder  filename=output/video.webm  compress=False
     Open Available Browser  https://robocorp.com/docs
     Sleep  2s
     Input Text  //input[@placeholder='Search']  SpaceX
@@ -19,5 +19,7 @@ Video Recording Example
     Close All Browsers
     # [Teardown]  Store Video Only If Run Fails
     [Teardown]  Stop Recorder
+
+
 
 
