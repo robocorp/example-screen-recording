@@ -9,7 +9,7 @@ Store Video Only If Run Fails
 
 *** Task ***
 Video Recording Example
-    [Setup]  Start Recorder  filename=output/video.avi
+    [Setup]  Start Recorder  filename=output/video.webm
     Open Available Browser  https://robocorp.com/docs
     Sleep  2s
     Input Text  //input[@placeholder='Search']  SpaceX

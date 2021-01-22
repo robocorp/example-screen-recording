@@ -39,7 +39,8 @@ class video_recorder:
             width = int(monitor["width"] * scale)
             height = int(monitor["height"] * scale)
 
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            # fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            fourcc = cv2.VideoWriter_fourcc(*'VP90')
             out = cv2.VideoWriter(filename, fourcc, fps, (width, height))
 
             prev_shot = None
