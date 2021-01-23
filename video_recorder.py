@@ -32,7 +32,6 @@ class video_recorder:
         self.compress = False
 
     def start_recorder(self, filename="recording.webm", max_length=60, monitor=1, scale=1.0, fps=5.0, compress="True"):
-        print("filename: ", filename)
         self.filename = filename
         self.fps = float(fps)
         self.max_frames = round(self.fps * float(max_length))
@@ -65,15 +64,10 @@ class video_recorder:
             return sct.monitors
 
     def _write_file(self):
-        print("writer started")
         num_frames = 0
         prev_frame = None
 
         fourcc = cv2.VideoWriter_fourcc(*'VP80')
-        print(self.filename)
-        print(self.fps)
-        print(self.width)
-        print(self.height)
         out = cv2.VideoWriter(self.filename, fourcc, self.fps, (self.width, self.height))
 
         while True:
@@ -81,14 +75,12 @@ class video_recorder:
                 break
 
             ts, frame = self.buffer.get()
-            print("writer", num_frames, ts)
-            if frame == "END":
+            if ts is None:
                 break
 
             if self.compress and prev_frame is not None and (prev_frame==frame).all():
                 continue
 
-            print("writer - stored")
             num_frames += 1
             prev_frame = frame
 
@@ -98,7 +90,6 @@ class video_recorder:
             cv2.putText(frame, '{0:.2f}'.format(ts), (10, 30),  cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 4)
             out.write(frame)
 
-        print("writer exit")
         out.release()
         self.state = "STOPPING"
 
@@ -120,7 +111,7 @@ class video_recorder:
                 frame = np.array(sct.grab(self.monitor))
                 self.buffer.put_nowait((time.time() - start_time, frame))
 
-        self.buffer.put_nowait((time.time() - start_time, "END"))
+        self.buffer.put_nowait((None, None))
 
 
 def main(argv=None):
@@ -130,8 +121,7 @@ def main(argv=None):
 
     try:
         rec = video_recorder()
-        print("%s" % args)
-        print("%s" % kwargs)
+
         rec.start_recorder(*args, **kwargs)
 
         time.sleep(4)
