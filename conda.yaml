@@ -7,5 +7,6 @@ dependencies:
   - python-mss
   - numpy
   - opencv
+  - pynput
   - pip:
     - rpaframework==7.0.5

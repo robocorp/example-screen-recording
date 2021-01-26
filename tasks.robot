@@ -19,7 +19,3 @@ Video Recording Example
     Close All Browsers
     # [Teardown]  Store Video Only If Run Fails
     [Teardown]  Stop Recorder
-
-
-
-
