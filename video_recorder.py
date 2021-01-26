@@ -98,7 +98,7 @@ class video_recorder:
         prev_frame = None
 
         fourcc = cv2.VideoWriter_fourcc(*'VP80')
-        
+
         with suppress_stderr():
             out = cv2.VideoWriter(self.filename, fourcc, self.fps, (self.width, self.height))
 
@@ -117,7 +117,7 @@ class video_recorder:
             else:
                 if prev_frame is not None and (prev_frame==frame).all():
                     continue
-            
+
             cur_frame += 1
             prev_frame = frame
 
@@ -163,20 +163,12 @@ class video_recorder:
 
 
 def main():
-    try:
-        rec = video_recorder()
+    rec = video_recorder()
+    rec.start_recorder("video.webm", fps=20, scale=0.5, force_fps="True")
 
-        rec.start_recorder("video.webm", fps=20, scale=0.5, force_fps="True")
+    time.sleep(4)
 
-        time.sleep(4)
-
-        rec.stop_recorder()
-
-        return os.EX_OK
-
-    except UsageError as err:
-        print(err.msg, file=sys.stderr)
-        return os.EX_USAGE
+    rec.stop_recorder()
 
 
 if __name__ == "__main__":

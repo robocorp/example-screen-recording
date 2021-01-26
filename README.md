@@ -13,7 +13,7 @@ Copy video_recorder.py to Robot directory and import it in .robot file
 Library  video_recording.py
 ```
 
-Screen Recording requires python-mss, numpy and opencv libraries that must be added to conda.yaml:
+Screen Recording requires python-mss, numpy, opencv and punpyt libraries that must be added to conda.yaml:
 ```
 channels:
   - defaults
@@ -24,6 +24,7 @@ dependencies:
   - python-mss
   - numpy
   - opencv
+  - pynput
   - pip:
     - rpaframework==7.0.5
 ```
@@ -38,7 +39,8 @@ Start recording:
       monitor=1
       scale=1.0
       fps=5
-      compression=True
+      force_fps=False
+      fourcc=VP80
 
 Stop or cancel recording:
 
