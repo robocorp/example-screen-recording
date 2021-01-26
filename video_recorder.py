@@ -36,6 +36,12 @@ class suppress_stderr(object):
         os.close(self.null_fd)
         os.close(self.save_fd)
 
+def is_truthy(item):
+    if is_string(item):
+        return item.upper() not in ['FALSE', 'NONE', 'NO', '']
+    return bool(item)
+
+
 class video_recorder:
     def __init__(self):
         self.capture_thread = None
@@ -46,16 +52,16 @@ class video_recorder:
         self.monitor = None
         self.width = 0
         self.height = 0
-        self.frames_left = 0
+        self.max_frame = 0
         self.fps = 0
-        self.compress = False
+        self.force_fps = False
         self.stop_capture = None
 
-    def start_recorder(self, filename="output/video.webm", max_length=60, monitor=1, scale=1.0, fps=4, compress="True", fourcc="VP80"):
+    def start_recorder(self, filename="output/video.webm", max_length=60, monitor=1, scale=1.0, fps=4, force_fps="False", fourcc="VP80"):
         self.filename = filename
         self.scale = float(scale)
         self.fps = int(fps)
-        self.compress = compress.lower() == "true"
+        self.force_fps = is_truthy(force_fps)
         self.fourcc = fourcc
 
         with mss.mss() as sct:
@@ -68,7 +74,7 @@ class video_recorder:
             self.width = int(self.monitor["width"] * self.scale)
             self.height = int(self.monitor["height"] * self.scale)
 
-        self.frames_left = self.fps * int(max_length)
+        self.max_frame = self.fps * int(max_length)
         self.buffer = queue.Queue()
 
         self.stop_capture = threading.Event()
@@ -88,21 +94,31 @@ class video_recorder:
         os.remove(self.filename)
 
     def _write_file(self):
+        cur_frame = 0
         prev_frame = None
 
         fourcc = cv2.VideoWriter_fourcc(*'VP80')
-        out = cv2.VideoWriter(self.filename, fourcc, self.fps, (self.width, self.height))
+        
+        with suppress_stderr():
+            out = cv2.VideoWriter(self.filename, fourcc, self.fps, (self.width, self.height))
 
-        while self.frames_left:
-            frame_number, ts, img, mouse = self.buffer.get()
-            if ts is None:
+        while cur_frame < self.max_frame:
+            data = self.buffer.get()
+            if data is None:
                 break
-            
-            frame = np.array(img)
-            if self.compress and prev_frame is not None and (prev_frame==frame).all():
-                continue
 
-            self.frames_left += 1
+            ts, img, mouse = data
+            frame = np.array(img)
+
+            if self.force_fps:
+                while ts > (cur_frame + 1) / self.fps:
+                    cur_frame += 1
+                    out.write(out_frame)
+            else:
+                if prev_frame is not None and (prev_frame==frame).all():
+                    continue
+            
+            cur_frame += 1
             prev_frame = frame
 
             frame = cv2.resize(frame, (self.width, self.height))
@@ -116,8 +132,8 @@ class video_recorder:
                 w = max(1, round(self.width * self.scale / 500))
                 cv2.circle(frame, (x, y), r, (0, 0, 255), w)
 
-            cv2.putText(frame, '{0:.2f}'.format(ts), (10, 30),  cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 4)
-            out.write(frame)
+            out_frame = cv2.putText(frame, '{0:.2f}'.format(ts), (10, 30),  cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 4)
+            out.write(out_frame)
 
         self.stop_capture.set()
         out.release()
@@ -136,7 +152,6 @@ class video_recorder:
                 # Get raw pixels from the screen, save it to a Numpy array
                 # frame = np.array(sct.grab(self.monitor))
                 self.buffer.put_nowait((
-                    frame_number,
                     time.time() - start_time,
                     sct.grab(self.monitor),
                     mouse.position
@@ -144,14 +159,14 @@ class video_recorder:
 
                 frame_number += 1
 
-        self.buffer.put_nowait((None, None, None, None))
+        self.buffer.put_nowait(None)
 
 
 def main():
     try:
         rec = video_recorder()
 
-        rec.start_recorder("video.webm", fps=5, scale=0.5, compress="False")
+        rec.start_recorder("video.webm", fps=20, scale=0.5, force_fps="True")
 
         time.sleep(4)
 
