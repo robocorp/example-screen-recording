@@ -13,7 +13,7 @@ Copy video_recorder.py to Robot directory and import it in .robot file
 Library  video_recording.py
 ```
 
-Screen Recording requires python-mss, numpy, opencv and punpyt libraries that must be added to conda.yaml:
+Add python-mss, numpy, opencv and pynput -libraries to conda.yaml e.g.
 ```
 channels:
   - defaults
@@ -31,7 +31,7 @@ dependencies:
 
 ## Usage
 
-Start recording:
+### Start recording:
 
     Start Recording
       filename=recording.avi
@@ -42,7 +42,19 @@ Start recording:
       force_fps=False
       fourcc=VP80
 
-Stop or cancel recording:
+    Example: Start Recording  filename=output/video.webm
+
+#### Arguments
+
+ - ``filename`` specifies the name by which the record will be saved. Use e.g. ``filename=output/video.webml``  to upload record to the Robocorp Cloud. Extension specifies the container type and it must be compatible with the ``fourcc`` argument below.
+ - ``max_length`` maximum length of the record in seconds. Recording will stop automatically when limit is reached.
+ - ``monitor`` selects which monitor you want to capture. Use value 0 to capture all.
+ - ``scale`` is used to change the size of the screen recordings. It specifies how much this reduction is with respect to screen resolution. By default this parameter is set to native screen resolution.
+ - ``fps`` specifies the frame rate at which the video is displayed.
+ - ``force_fps`` if set to true, recorder will add duplicate frames if capture can't keep up. This shuold keep the recording close to real time. If set to false, recorder will never write consecutive duplicate frames. This may speed up the play, but save disc space.
+ - ``fourcc`` name of the video codec - do not change unless you know what you are doing ;-)
+
+### Stop or cancel recording:
 
     Stop Recording
     Cancel Recording

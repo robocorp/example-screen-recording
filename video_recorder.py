@@ -37,7 +37,7 @@ class suppress_stderr(object):
         os.close(self.save_fd)
 
 def is_truthy(item):
-    if is_string(item):
+    if isinstance(item, str):
         return item.upper() not in ['FALSE', 'NONE', 'NO', '']
     return bool(item)
 
