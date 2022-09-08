@@ -1,24 +1,23 @@
 # +
+import logging
 import os
-import sys
-import time
-import threading
 import queue
+import sys
+import threading
+import time
 
-import numpy as np
 import cv2
 import mss
+import numpy as np
 from pynput.mouse import Controller
 
-
-# -
 
 class UsageError(Exception):
     def __init__(self, msg):
         self.msg = msg
 
-class suppress_stderr(object):
 
+class suppress_stderr(object):
     def __init__(self):
         # Open a null file
         self.null_fd = os.open(os.devnull, os.O_RDWR)
@@ -36,14 +35,27 @@ class suppress_stderr(object):
         os.close(self.null_fd)
         os.close(self.save_fd)
 
+
 def is_truthy(item):
     if isinstance(item, str):
-        return item.upper() not in ['FALSE', 'NONE', 'NO', '']
+        return item.upper() not in ["FALSE", "NONE", "NO", ""]
     return bool(item)
+
+
+def get_fourcc_from_filename_extension(filename):
+    default_fourcc = "VP80"
+    fourcc_list = {"webm": "VP80", "avi": "XVID"}
+    file_extension = filename.rsplit(".")[-1].lower()
+    return (
+        fourcc_list[file_extension]
+        if file_extension in fourcc_list.keys()
+        else default_fourcc
+    )
 
 
 class video_recorder:
     def __init__(self):
+        self.logger = logging.getLogger(__file__)
         self.capture_thread = None
         self.output_thread = None
 
@@ -57,12 +69,21 @@ class video_recorder:
         self.force_fps = False
         self.stop_capture = None
 
-    def start_recorder(self, filename="output/video.webm", max_length=60, monitor=1, scale=1.0, fps=4, force_fps="False", fourcc="VP80"):
+    def start_recorder(
+        self,
+        filename="output/video.webm",
+        max_length=60,
+        monitor=1,
+        scale=1.0,
+        fps=20,
+        force_fps=False,
+        fourcc=None,
+    ):
         self.filename = filename
         self.scale = float(scale)
         self.fps = int(fps)
         self.force_fps = is_truthy(force_fps)
-        self.fourcc = fourcc
+        self.fourcc = fourcc or get_fourcc_from_filename_extension(filename)
 
         with mss.mss() as sct:
             # Part of the screen to capture
@@ -97,10 +118,15 @@ class video_recorder:
         cur_frame = 0
         prev_frame = None
 
-        fourcc = cv2.VideoWriter_fourcc(*'VP80')
+        fourcc = cv2.VideoWriter_fourcc(*self.fourcc)
 
         with suppress_stderr():
-            out = cv2.VideoWriter(self.filename, fourcc, self.fps, (self.width, self.height))
+            out = cv2.VideoWriter(
+                self.filename,
+                fourcc,
+                self.fps,
+                (self.width, self.height),
+            )
 
         while cur_frame < self.max_frame:
             data = self.buffer.get()
@@ -115,7 +141,7 @@ class video_recorder:
                     cur_frame += 1
                     out.write(out_frame)
             else:
-                if prev_frame is not None and (prev_frame==frame).all():
+                if prev_frame is not None and (prev_frame == frame).all():
                     continue
 
             cur_frame += 1
@@ -132,8 +158,16 @@ class video_recorder:
                 w = max(1, round(self.width * self.scale / 500))
                 cv2.circle(frame, (x, y), r, (0, 0, 255), w)
 
-            out_frame = cv2.putText(frame, '{0:.2f}'.format(ts), (10, 30),  cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 4)
-            out.write(out_frame)
+            out_frame = cv2.putText(
+                frame,
+                "{0:.2f}".format(ts),
+                (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1.0,
+                (0, 0, 255),
+                4,
+            )
+            out.write(frame)
 
         self.stop_capture.set()
         out.release()
@@ -151,11 +185,9 @@ class video_recorder:
 
                 # Get raw pixels from the screen, save it to a Numpy array
                 # frame = np.array(sct.grab(self.monitor))
-                self.buffer.put_nowait((
-                    time.time() - start_time,
-                    sct.grab(self.monitor),
-                    mouse.position
-                ))
+                self.buffer.put_nowait(
+                    (time.time() - start_time, sct.grab(self.monitor), mouse.position)
+                )
 
                 frame_number += 1
 
@@ -164,14 +196,12 @@ class video_recorder:
 
 def main():
     rec = video_recorder()
-    rec.start_recorder("video.webm", fps=20, scale=0.5, force_fps="True")
+    rec.start_recorder(filename="video.avi", fps=20, scale=0.5)
 
-    time.sleep(4)
+    time.sleep(20)
 
     rec.stop_recorder()
 
 
 if __name__ == "__main__":
     main()
-
-

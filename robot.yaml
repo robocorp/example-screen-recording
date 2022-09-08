@@ -1,6 +1,8 @@
 tasks:
-  Default:
+  Record:
     robotTaskName: Video Recording Example
+  Python:
+    shell: python video_recorder.py
 
 condaConfigFile: conda.yaml
 artifactsDir: output

@@ -1,11 +1,11 @@
 channels:
   - conda-forge
 dependencies:
-  - python=3.7.5
-  - pip=20.1
-  - python-mss
-  - numpy
-  - opencv
-  - pynput
+  - python=3.9.13
+  - pip=22.1.2
+  - python-mss=6.1.0
+  - numpy=1.23.2
+  - opencv=4.6.0
+  - pynput=1.7.3
   - pip:
-    - rpaframework==7.0.5
+    - rpaframework==16.3.0
